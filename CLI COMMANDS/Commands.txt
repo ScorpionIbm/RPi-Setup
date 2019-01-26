@@ -81,3 +81,6 @@ check promiscous mode
  ip link show eth0
  
 ip link set [interface] promisc on
+
+
+tc qdisc del dev eth0 root
