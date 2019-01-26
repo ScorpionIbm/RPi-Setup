@@ -1,0 +1,23 @@
+00:be:3b:b9:51:fa
+00:1b:b1:a2:70:4a
+
+b8:27:eb:19:d7:a0	raspberrypi
+00:be:3b:b9:51:fa	Honor_Play-6e2fb17288ea15
+c0:17:4d:fb:6f:56	Maram-galaxy-A5-2017
+58:48:22:eb:11:06	Sony-Ahmed
+00:1b:b1:a2:70:4a	Islam-PC
+f4:f5:db:f4:0a:63	RedmiNote4-HamdyRedmi
+bc:b3:08:bd:7c:8a	Infinix-Baba
+c8:21:58:98:92:25	Maram-PC
+d0:53:49:5a:e3:d7	Ahmad-PC
+78:24:af:e3:df:ad	Hamdy-T100
+
+b8:27:eb:4c:82:f5   Rpi WIFI
+
+58:48:22:eb:11:06	192.168.1.3	41993	
+
+
+58:48:22:eb:11:06 192.168.5.22 android-fabccfea8f114ded 01:58:48:22:eb:11:06
+00:1b:b1:a2:70:4a 192.168.5.10 Islam-PC 01:00:1b:b1:a2:70:4a
+00:be:3b:b9:51:fa 192.168.5.20 Honor_Play-6e2fb17288ea15 01:00:be:3b:b9:51:fa
+c0:17:4d:fb:6f:56 192.168.5.21 Maram-galaxy-A5-2017 01:c0:17:4d:fb:6f:56

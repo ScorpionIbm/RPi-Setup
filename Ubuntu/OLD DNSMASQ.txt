@@ -1,0 +1,58 @@
+
+bind-interfaces
+
+
+
+##/etc/dnsmasq.conf
+
+
+#####################################DNS SETUP##################################$
+
+##port=5353
+#domain-needed
+#bogus-priv
+#dhcp-sequential-ip
+#
+#domain=mydomain.net
+#expand-hosts
+#local=/mydomain.net/
+#
+##listen-address=127.0.0.1
+##listen-address=127.0.1.1
+##listen-address=192.168.1.5
+#listen-address=192.168.5.1
+#cache-size=150
+##bind-interfaces
+#server=163.121.128.134
+#server=163.121.128.135
+#server=8.8.8.8
+
+
+
+#######################################DHCP SETUP###############################$
+
+
+#interface=wlan0
+#        dhcp-range=192.168.5.100,192.168.5.200,255.255.255.0,24h
+#        #set default gateway
+#        dhcp-option=3,192.168.5.1
+#        #set DNS server
+#        dhcp-option=6,163.121.128.134,163.121.128.135
+#
+#
+##Islam
+#        dhcp-host=00:1b:b1:a2:70:4a,192.168.5.10,Islam-PC
+#        dhcp-host=00:be:3b:b9:51:fa,192.168.5.11,Honor-Play
+##Hamdy
+#        dhcp-host=78:24:af:e3:df:ad,192.168.5.20,Hamdy-Tablet
+#        dhcp-host=f4:f5:db:f4:0a:63,192.168.5.21,Hamdy-Phone
+##Ahmed
+#        dhcp-host=d0:53:49:5a:e3:d7,192.168.5.30,Ahmad-PC
+#        dhcp-host=58:48:22:eb:11:06,192.168.5.31,Ahmed-Phone
+##Maram
+#        dhcp-host=c8:21:58:98:92:25,192.168.5.40,Maram-PC
+#        dhcp-host=c0:17:4d:fb:6f:56,192.168.5.41,Maram-Phone
+##Mama
+#        #dhcp-host=c0:17:4d:fb:6f:56,192.168.5.50,Mama-Phone
+##Baba
+#        dhcp-host=bc:b3:08:bd:7c:8a,192.168.5.60,Baba-Phone

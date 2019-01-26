@@ -1,0 +1,111 @@
+DietPi
+	use C:\Users\Islam\Desktop\Raspberry Pi\DietPi_RPi-ARMv6-Stretch\dietpi.txt for auto setup
+	IPv4 Forward
+		/etc/sysctl.conf
+			net.ipv4.ip_forward=1
+	add second IP (for Pihole and darkstat together)
+		ip addr add 192.168.1.10/24 dev eth0
+		and add to /etc/rc.local
+			OR
+		/etc/network/interfaces
+			#Secondary IP-address
+			iface eth0 static
+				address 192.168.1.10/24
+	Install PiHole
+
+PiHole
+	add static Client IPs and bind interfaces
+		/etc/dnsmasq.d/04-pihole-static-dhcp.conf
+			###############Extra DNSMASQ Settings###############
+
+			expand-hosts
+			bind-interfaces
+			dhcp-sequential-ip
+
+			##############GUEST IP RANGE#######################
+
+			dhcp-range=tag:!known,192.168.1.100,192.168.1.150,2h
+
+			##############BLOCK Ads############################
+
+			#Islam
+							dhcp-host=00:1b:b1:a2:70:4a,192.168.1.20,Islam-PC
+							dhcp-host=00:be:3b:b9:51:fa,192.168.1.21,Islam-Phone
+			#Hamdy
+							dhcp-host=78:24:af:e3:df:ad,192.168.1.30,Hamdy-PC
+							dhcp-host=f4:f5:db:f4:0a:63,192.168.1.31,Hamdy-Phone
+			#Ahmed
+							dhcp-host=d0:53:49:5a:e3:d7,192.168.1.40,Ahmed-PC
+							dhcp-host=58:48:22:eb:11:06,192.168.1.41,Ahmed-Phone
+			#Maram
+							dhcp-host=c8:21:58:98:92:25,192.168.1.50,Maram-PC
+							dhcp-host=c0:17:4d:fb:6f:56,192.168.1.51,Maram-Phone
+			#Mama
+							#dhcp-host=c0:17:4d:fb:6f:56,192.168.1.61,Mama-Phone
+			#Baba
+							dhcp-host=94:39:e5:ec:27:21,192.168.1.70,Baba-PC
+							dhcp-host=bc:b3:08:bd:7c:8a,192.168.1.71,Baba-Phone
+
+
+			###############NO BLOCK Ads####################
+
+			#dhcp-option=tag:ads,option:6,8.8.8.8,8.8.4.4
+
+			#Islam
+			#				dhcp-host=00:1b:b1:a2:70:4a,set:ads,192.168.1.20,Islam-PC
+			#				dhcp-host=00:be:3b:b9:51:fa,set:ads,192.168.1.21,Islam-Phone
+			#Hamdy
+			#				dhcp-host=78:24:af:e3:df:ad,set:ads,192.168.1.30,Hamdy-PC
+			#				dhcp-host=f4:f5:db:f4:0a:63,set:ads,192.168.1.31,Hamdy-Phone
+			#Ahmed
+			#				dhcp-host=d0:53:49:5a:e3:d7,set:ads,192.168.1.40,Ahmed-PC
+			#				dhcp-host=58:48:22:eb:11:06,set:ads,192.168.1.41,Ahmed-Phone
+			#Maram
+			#				dhcp-host=c8:21:58:98:92:25,set:ads,192.168.1.50,Maram-PC
+			#				dhcp-host=c0:17:4d:fb:6f:56,set:ads,192.168.1.51,Maram-Phone
+			#Mama
+			#				dhcp-host=c0:17:4d:fb:6f:56,set:ads,192.168.1.61,Mama-Phone
+			#Baba
+			#				dhcp-host=94:39:e5:ec:27:21,set:ads,192.168.1.70,Baba-PC
+			#				dhcp-host=bc:b3:08:bd:7c:8a,set:ads,192.168.1.71,Baba-Phone
+
+IPTABLES
+		apt install iptables
+	SNAT
+		iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o eth0 -j SNAT --to-source 192.168.1.5
+		OR
+		iptables -t nat -A POSTROUTING -m iprange --src-range 192.168.1.2-192.168.1.254 -o eth0 -j SNAT --to-source 192.168.1.5
+	Firewall ports
+		iptables -A INPUT -d 192.168.1.10/32 -i eth0 -p tcp -m iprange --src-range 192.168.1.20-192.168.1.21 -m tcp --dport 80 -j ACCEPT
+		iptables -A INPUT -d 192.168.1.10/32 -i eth0 -p tcp -m tcp --dport 80 -j REJECT --reject-with tcp-reset
+	IPtables restore (different files for each set of rules)
+			iptables-save -t nat > /etc/iptables.ipv4.nat
+			iptables-save -t filter > /etc/iptables-firewall.ipv4.nat
+		/etc/rc.local
+			iptables-restore < /etc/iptables.ipv4.nat
+			iptables-restore < /etc/iptables-firewall.ipv4.nat
+lighttpd
+	Change bind server, redirect and disable IPv6
+		/etc/lighttpd/lighttpd.conf
+			server.bind                 = "192.168.1.5"
+			url.redirect = ( "^/$" => "http://pi.hole/admin" )
+			#include_shell "/usr/share/lighttpd/use-ipv6.pl " + server.port
+iftop
+	apt install libpcap libpcap-dev libncurses5 libncurses5-dev
+	apt install iftop
+
+darkstat
+	apt install libpcap-dev
+	apt install darkstat
+	disable Local and apply filter 
+		/etc/darkstat/init.cfg
+			START_DARKSTAT=yes
+			PORT="-p 80"
+			BINDIP="-b 192.168.1.10"
+			#LOCAL="-l 192.168.1.0/255.255.255.0"
+			FILTER="not (src net 192.168.1.0/24 and dst net 192.168.1.0/24)"
+	add ip addr add 192.168.1.10/24 dev eth0 to /etc/init.d/darkstat
+	
+	service darkstat start
+	systemctl enable darkstat
+

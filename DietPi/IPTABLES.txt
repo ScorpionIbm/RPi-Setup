@@ -1,0 +1,22 @@
+If you're trying to hide your machine's existence entirely, -j DROP is appropriate. For example, you might use this to implement a blacklist.
+
+If you're trying to hide the fact that a port is open, you should mimic the behavior that would occur if the port was not open:
+
+TCP: -p tcp -j REJECT --reject-with tcp-reset
+UDP: -p udp -j REJECT --reject-with icmp-port-unreachable
+
+
+
+If a port scanner sees that a few ports are dropping packets while most are rejecting them, it can assume the dropped packets are on ports that are open but hidden.
+
+
+
+-A INPUT -i eth0 -p tcp -m iprange --src-range 192.168.1.20-192.168.1.21 -m tcp --dport 666 -j ACCEPT
+-A INPUT -i eth0 -p tcp -m tcp --dport 666 -j REJECT --reject-with tcp-reset
+
+
+
+
+
+
+iptables -t mangle -A PREROUTING -s 13.0.0.0/24 -d 172.20.203.0/24 -j MARK --set-mark 1

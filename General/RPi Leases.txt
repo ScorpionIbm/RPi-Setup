@@ -1,0 +1,14 @@
+
+
+	dhcp-host=00:1b:b1:a2:70:4a,192.168.5.10,Islam-PC
+	dhcp-host=00:be:3b:b9:51:fa,192.168.5.11,Honor-Play
+	dhcp-host=78:24:af:e3:df:ad,192.168.5.20,Hamdy-Tablet
+	dhcp-host=f4:f5:db:f4:0a:63,192.168.5.21,Hamdy-Phone
+	dhcp-host=d0:53:49:5a:e3:d7,192.168.5.30,Ahmad-PC
+	dhcp-host=58:48:22:eb:11:06,192.168.5.31,Ahmed-Phone
+	dhcp-host=c8:21:58:98:92:25,192.168.5.40,Maram-PC
+	dhcp-host=c0:17:4d:fb:6f:56,192.168.5.41,Maram-Phone
+	dhcp-host=bc:b3:08:bd:7c:8a,192.168.5.60,Baba-Phone
+
+b8:27:eb:4c:82:f5   Rpi WIFI
+b8:27:eb:19:d7:a0   Rpi Ethernet

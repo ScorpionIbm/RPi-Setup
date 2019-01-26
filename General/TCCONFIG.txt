@@ -1,0 +1,23 @@
+sudo tcset wlan0 --rate 1000kbps --network 10.42.0.110
+
+tcshow wlan0
+
+sudo tcdel wlan0 --all
+
+
+sudo tcset wlan0 --dst-network 192.168.1.10/32 --exclude-dst-network 192.168.5.1 --rate 1000kbps --tc-command
+
+
+
+
+
+
+tcset eth0 --rate 1000kbps --network 192.168.1.10 --tc-command
+
+
+
+sudo tcset eth0 --rate 1000kbps --network 192.168.1.10 --tc-command
+
+
+sudo tcset wlan0 --rate 100M --network 192.168.0.0/24 --add
+

@@ -1,0 +1,83 @@
+cat /proc/sys/kernel/random/entropy_avail
+
+
+For complete log look at /var/log/syslog and /var/log/auth.log
+
+view log
+	less /var/log/syslog
+	tail -f /var/log/syslog
+	dmesg -T
+Turn off power save
+	post-up iw dev $IFACE set power_save off
+
+
+Reboot interface
+	sudo ifdown wlan0 && sudo ifup wlan0
+	
+	
+	#sudo /etc/init.d/networking restart
+	#sudo /etc/init.d/hostapd restart
+	
+	
+Disable Bluetooth	
+
+	sudo nano /etc/modprobe.d/raspi-blacklist.conf
+
+		#wifi
+			blacklist brcmfmac
+			blacklist brcmutil
+		#bt
+			blacklist btbcm
+			blacklist hci_uart
+
+	sudo nano /boot/config.txt
+	Add to the end of the file
+		dtoverlay=pi3-disable-bt
+
+Disable IPv6
+	To disable it completely just add this to /boot/cmdline.txt
+
+		ipv6.disable=1
+
+
+Four years later, here's an answer for future people coming here through google :)
+
+you can modify
+Code: Select all
+
+/etc/default/hostapd
+and set 
+
+
+DAEMON_OPTS="-dd -t -f /home/pi/hostapd.log"
+
+
+FING
+
+fing -n 192.168.5.1/24 -r 1 -o table,text,console
+
+DHCP leases
+sudo nano /var/lib/misc/dnsmasq.leases
+
+DNSMASQ config Network Manager
+sudo nano /etc/NetworkManager/dnsmasq-shared.d/dns.conf
+
+Check Listening services
+	netstat -plnt
+	
+	ss -plnt
+
+	Check listening on port
+		lsof -i :53
+
+ sudo nano /lib/systemd/system/dnsmasq.service
+ 
+ dpkg -s network-manager | grep '^Version:'
+ 
+check promiscous mode
+
+ netstat -i
+ 
+ ip link show eth0
+ 
+ip link set [interface] promisc on

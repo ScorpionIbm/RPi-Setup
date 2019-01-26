@@ -1,0 +1,36 @@
+- Install Ubuntu Mate 16
+
+- enable SSH
+
+- Create Hotspot using Network Manager GUI
+
+- Set static IP in Connection Config File at sudo nano /etc/NetworkManager/system-connections/Pi@NeT
+		in ipv4 section put
+		addresses=192.168.5.1/24,192.168.5.1
+- Change Network manager config dns=dnsmasq in /etc/NetworkManager/NetworkManager.conf
+
+- Disable wifi power save by setting the value = 2 in /etc/NetworkManager/conf.d/default-wifi-powersave-on.conf
+
+- Setup DNSMASQ in 	sudo nano /etc/NetworkManager/dnsmasq-shared.d/DHCP.conf
+					sudo nano /etc/NetworkManager/dnsmasq.d/DNS.conf
+					sudo nano /etc/dnsmasq.d/network-manager
+
+- Not sure 
+
+	- Not sure if must Disable systemd-resolved 
+		Disable and stop the systemd-resolved service:
+
+		sudo systemctl disable systemd-resolved.service
+		sudo systemctl stop systemd-resolved
+		
+		Then put the following line in the [main] section of your /etc/NetworkManager/NetworkManager.conf:
+		dns=default
+		
+		Delete the symlink /etc/resolv.conf
+		rm /etc/resolv.conf
+		
+		Restart network-manager
+		sudo service network-manager restart
+		
+	- install DNSMASQ
+		

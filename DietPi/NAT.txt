@@ -1,0 +1,30 @@
+
+ iptables -t nat -A  POSTROUTING -o eth0 -j MASQUERADE
+OR
+
+
+iptables -t nat -A POSTROUTING -m iprange --src-range 192.168.1.2-192.168.254 -o eth0 -j SNAT --to-source 192.168.1.5
+
+iptables -t nat -A POSTROUTING --src-range 192.168.1.2-192.168.254 -o eth0 -j SNAT --to-source 192.168.1.5
+
+
+
+
+ sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+
+ nano /etc/rc.local
+
+ iptables-restore < /etc/iptables-limits.ipv4.nat 
+  
+ nano /etc/iptables-limits.ipv4.nat
+ 
+
+
+
+
+tcset eth0 --rate 1000kbps --network 192.168.1.10
+iptables -t nat -A POSTROUTING -s 192.168.1.10/32 -o eth0 -j SNAT --to-source 192.168.1.5
+
+
+tcset eth0 --direction incoming --rate 0.6Mbps --network 192.168.1.5
+tcset eth0 --direction outgoing --rate 0.6Mbps --network 192.168.1.5

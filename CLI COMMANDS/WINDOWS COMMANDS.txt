@@ -1,0 +1,3 @@
+ WINDOWS
+ 
+ powershell "Measure-Command { nslookup www.google.es }"
