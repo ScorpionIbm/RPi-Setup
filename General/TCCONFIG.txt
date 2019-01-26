@@ -21,3 +21,21 @@ sudo tcset eth0 --rate 1000kbps --network 192.168.1.10 --tc-command
 
 sudo tcset wlan0 --rate 100M --network 192.168.0.0/24 --add
 
+
+
+netem is not needed
+
+	tc qdisc add dev eth0 root handle 1a1a: htb default 1
+	tc class add dev eth0 parent 1a1a: classid 1a1a:1 htb rate 100000kbit
+	tc class add dev eth0 parent 1a1a: classid 1a1a:78 htb rate 1000.0Kbit ceil 1000.0Kbit burst 12.5KB cburst 12.5KB
+	tc qdisc add dev eth0 parent 1a1a:78 handle 210e: netem
+	tc filter add dev eth0 protocol ip parent 1a1a: prio 2 u32 match ip dst 192.168.1.20/32 match ip src 0.0.0.0/0 flowid 1a1a:78
+	
+	
+	
+	tc qdisc add dev eth0 root handle 1a1a: htb default 1
+	tc class add dev eth0 parent 1a1a: classid 1a1a:1 htb rate 100000kbit
+	tc class add dev eth0 parent 1a1a: classid 1a1a:78 htb rate 1000.0Kbit ceil 1000.0Kbit burst 12.5KB cburst 12.5KB
+	tc filter add dev eth0 protocol ip parent 1a1a: prio 2 u32 match ip dst 192.168.1.20/32 match ip src 0.0.0.0/0 flowid 1a1a:78
+
+
