@@ -84,3 +84,10 @@ ip link set [interface] promisc on
 
 
 tc qdisc del dev eth0 root
+
+for darkstat
+
+	to get darkstat pid
+		ps -ef | grep darkstat 
+	to send SIGUSR2 signal to darkstat
+		kill -SIGUSR2 $pid
