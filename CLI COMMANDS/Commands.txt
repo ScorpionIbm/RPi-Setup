@@ -91,3 +91,11 @@ for darkstat
 		ps -ef | grep darkstat 
 	to send SIGUSR2 signal to darkstat
 		kill -SIGUSR2 $pid
+		
+
+To view kernel messages
+	dmesg -T
+
+Check installed version of package
+	apt-cache policy [package name]
+
