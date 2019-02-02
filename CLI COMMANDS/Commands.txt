@@ -91,7 +91,8 @@ for darkstat
 		ps -ef | grep darkstat 
 	to send SIGUSR2 signal to darkstat
 		kill -SIGUSR2 $pid
-		
+	All in one command
+		kill -SIGUSR2 $(pgrep -o darkstat)
 
 To view kernel messages
 	dmesg -T
