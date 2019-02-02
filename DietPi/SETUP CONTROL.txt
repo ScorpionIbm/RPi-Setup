@@ -104,7 +104,9 @@ darkstat
 			BINDIP="-b 192.168.1.10"
 			#LOCAL="-l 192.168.1.0/255.255.255.0"
 			FILTER="not (src net 192.168.1.0/24 and dst net 192.168.1.0/24)"
-	add ip addr add 192.168.1.10/24 dev eth0 to /etc/init.d/darkstat
+	add to /etc/init.d/darkstat to appropriate lines in start/stop/restart 
+		ip addr add 192.168.1.10/24 dev eth0"
+		"ip addr del 192.168.1.10/24 dev eth0" 
 	
 	service darkstat start
 	systemctl enable darkstat
