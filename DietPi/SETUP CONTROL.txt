@@ -110,6 +110,10 @@ darkstat
 	
 	service darkstat start
 	systemctl enable darkstat
+	Create Cron job in /etc/cron.hourly/darkstat to save collected data to desk
+		#!/bin/bash
+		sudo kill -SIGUSR2 $(pgrep -o darkstat)
+	make /etc/cron.hourly/darkstat executable
 
 bandwidthd
 	apt install bandwidthd
