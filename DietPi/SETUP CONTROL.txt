@@ -109,3 +109,7 @@ darkstat
 	service darkstat start
 	systemctl enable darkstat
 
+bandwidthd
+	apt install bandwidthd
+	/etc/init.d/bandwidthd start
+	Create a link in /var/www linking to /var/lib/bandwidthd/htdocs
