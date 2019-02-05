@@ -1,0 +1,42 @@
+[![Chart of Network Hierarchy][1]][1]
+
+Modem/Router is connected to Internet (192.168.1.1)
+
+No DHCP server is running on Modem/Router
+
+Devices connect to the network through Wifi provided by Modem/Router 
+
+Devices receive DHCP settings from RPi (DHCP and DNS server) pointing to RPi as gateway (192.168.1.5)
+
+Using IPv4 forwarding and SNAT devices can use the RPi internet connection (SNAT 192.168.1.0/24 to 192.168.1.5)
+
+**The problem**
+
+     •	I want to control traffic to split an DOWN/UP link
+        with speed 5Mbps/1Mbps and 100GB/ Month quota
+
+     •	The idea is to not allow a single user to saturate
+        the link and give priority to PCs for online games
+
+     •	The quota is mostly used by Youtube buffering at highest quality,
+        so I need to put speed limit for each user to prevent Youtube
+        from automatically buffering high quality
+
+     •	The speed limits are generally there to control the quota I have
+
+**What I am looking for**
+
+     •	Each user gets a certain amount of traffic 1Mbps with a ceiling of 1.5Mbps
+
+     •	Devices of each user split the traffic between each other as follows
+
+       o	PC gets by Max 1Mbps with higher priority
+
+       o	Phone gets Max 1Mbps with lower priority
+
+     •	PCs usually play online games (mostly League of Legends) 
+        so I need the lowest possible latency for PCs
+
+I made a simple script using tc and the htb qdisc but I notice lag spikes during gaming 
+
+  [1]: https://i.stack.imgur.com/i2gaL.png
