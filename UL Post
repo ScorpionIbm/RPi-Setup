@@ -39,4 +39,10 @@ Using IPv4 forwarding and SNAT devices can use the RPi internet connection (SNAT
 
 I made a simple script using tc and the htb qdisc but I notice lag spikes during gaming 
 
+**The tc script is [here][2]**
+
+Looking for better Solutions
+
+
   [1]: https://i.stack.imgur.com/i2gaL.png
+  [2]: https://pastebin.com/n5DU0EAP
