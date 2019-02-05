@@ -18,5 +18,9 @@ If a port scanner sees that a few ports are dropping packets while most are reje
 
 
 
+tc filter add dev eth0 protocol ip parent 1: prio 1 handle 6 fw flowid 1:30
+
 
 iptables -t mangle -A PREROUTING -s 13.0.0.0/24 -d 172.20.203.0/24 -j MARK --set-mark 1
+
+iptables -t mangle -A PREROUTING -i eth0 -j MARK --set-mark 6
