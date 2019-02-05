@@ -100,3 +100,6 @@ To view kernel messages
 Check installed version of package
 	apt-cache policy [package name]
 
+tc qdisc show
+tc class show dev eth0
+tc filter show dev eth0
