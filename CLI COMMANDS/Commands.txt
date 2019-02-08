@@ -103,3 +103,9 @@ Check installed version of package
 tc qdisc show
 tc class show dev eth0
 tc filter show dev eth0
+
+
+iptables -t mangle -F
+
+
+tc -s class show dev eth0
