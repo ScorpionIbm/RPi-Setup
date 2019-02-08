@@ -1,0 +1,38 @@
+tc filter add dev eth0 protocol ip parent 1: prio 1 handle 6 fw flowid 1:30
+
+
+iptables -t mangle -A PREROUTING -s 13.0.0.0/24 -d 172.20.203.0/24 -j MARK --set-mark 1
+
+iptables -t mangle -A PREROUTING -i eth0 -j MARK --set-mark 6
+
+
+iptables -t nat -A INPUT -i eth0 -p tcp -m iprange --src-range 192.168.1.20-192.168.1.21 -m tcp --dport 666 -j ACCEPT
+iptables -t nat -A POSTROUTING -m iprange --src-range 192.168.1.2-192.168.1.254 -o eth0 -j SNAT --to-source 192.168.1.5
+
+
+
+#TRIAL
+
+
+iptables -t mangle -A PREROUTING -m iprange --dst-range 192.168.1.20-192.168.1.29 -j MARK --set-mark 2
+iptables -t mangle -A PREROUTING -m iprange --dst-range 192.168.1.30-192.168.1.39 -j MARK --set-mark 3
+iptables -t mangle -A PREROUTING -m iprange --dst-range 192.168.1.40-192.168.1.49 -j MARK --set-mark 4
+iptables -t mangle -A PREROUTING -m iprange --dst-range 192.168.1.50-192.168.1.59 -j MARK --set-mark 5
+iptables -t mangle -A PREROUTING -m iprange --dst-range 192.168.1.60-192.168.1.69 -j MARK --set-mark 6
+iptables -t mangle -A PREROUTING -m iprange --dst-range 192.168.1.70-192.168.1.79 -j MARK --set-mark 7
+
+iptables -t mangle -A PREROUTING -m iprange --src-range 192.168.1.20-192.168.1.254 -j MARK --set-mark 100
+tc filter add dev eth0 protocol ip parent 1: handle 100 fw flowid 1:100
+
+
+
+tc filter add dev eth0 parent 1: protocol ip handle 2 fw flowid 1:20
+tc filter add dev eth0 parent 1: protocol ip handle 3 fw flowid 1:30
+tc filter add dev eth0 parent 1: protocol ip handle 4 fw flowid 1:40
+tc filter add dev eth0 parent 1: protocol ip handle 5 fw flowid 1:50
+tc filter add dev eth0 parent 1: protocol ip handle 6 fw flowid 1:60
+tc filter add dev eth0 parent 1: protocol ip handle 7 fw flowid 1:70
+
+
+
+
