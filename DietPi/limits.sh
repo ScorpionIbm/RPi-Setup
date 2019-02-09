@@ -68,8 +68,9 @@ $TC class add dev eth0 parent 1: classid 1:200 htb rate $G_DL ceil $G_DL_Ceil pr
 #############SETUP CLASSES#################################################################################################
 #############SETUP ROUTING FILTERS#########################################################################################
 ##############UPLOAD#########################
-$IPT -t mangle -A PREROUTING -m iprange --src-range 192.168.1.20-192.168.1.254 -j MARK --set-mark 100
-$TC filter add dev eth0 protocol ip parent 1: handle 100 fw flowid 1:100
+#$IPT -t mangle -A PREROUTING -m iprange --src-range 192.168.1.20-192.168.1.254 -j MARK --set-mark 100
+#$TC filter add dev eth0 protocol ip parent 1: handle 100 fw flowid 1:100
+$TC filter add dev eth0 protocol ip parent 1: u32 match ip src 192.168.1.0/24 flowid 1:100
 ##############ISLAM##########################
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.20 flowid 1:20
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.21 flowid 1:21
