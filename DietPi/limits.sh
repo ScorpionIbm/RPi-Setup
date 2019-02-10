@@ -5,8 +5,8 @@ IPT=/sbin/iptables
 #TC
 TC=/sbin/tc
 #Download
-DL=5000Kbit
-DL_Ceil=5000Kbit
+DL=1000Kbit
+DL_Ceil=1000Kbit
 #Upload
 UL=900Kbit
 UL_Ceil=900Kbit
@@ -14,10 +14,10 @@ UL_Prio=0
 #FQ_CODEL
 quantum=300
 #User Speed
-U_DL=1000Kbit
-U_DL_Ceil=1500Kbit
+U_DL=500Kbit
+U_DL_Ceil=1000Kbit
 #PC Speed
-PC_DL=900Kbit
+PC_DL=500Kbit
 PC_DL_Ceil=1000Kbit
 PC_DL_Prio=2
 #Mobile Speed
@@ -25,12 +25,12 @@ M_DL=450Kbit
 M_DL_Ceil=1000Kbit
 M_DL_Prio=5
 #Guest Speed
-G_DL=500Kbit
-G_DL_Ceil=500Kbit
+G_DL=1000Kbit
+G_DL_Ceil=1000Kbit
 G_DL_Prio=7
 #############SETUP VARIABLES###############################################################################################
 #############SETUP BASE CONNECTION#########################################################################################
-$TC qdisc add dev eth0 root handle 1: htb default 200
+$TC qdisc add dev eth0 root handle 1: htb default 100
 #############SETUP BASE CONNECTION#########################################################################################
 #############SETUP CLASSES#################################################################################################
 #DOWNLOAD
@@ -70,9 +70,13 @@ $TC class add dev eth0 parent 1: classid 1:200 htb rate $G_DL ceil $G_DL_Ceil pr
 ##############UPLOAD#########################
 #$IPT -t mangle -A PREROUTING -m iprange --src-range 192.168.1.20-192.168.1.254 -j MARK --set-mark 100
 #$TC filter add dev eth0 protocol ip parent 1: handle 100 fw flowid 1:100
-$TC filter add dev eth0 protocol ip parent 1: u32 match ip src 192.168.1.0/24 flowid 1:100
+#$TC filter add dev eth0 protocol ip parent 1: u32 match ip src 192.168.1.20 flowid 1:100
+#$IPT -t mangle -A POSTROUTING -o eth0 -m iprange --src-range 192.168.1.20-192.168.1.254 -j MARK --set-mark 3
+#$TC filter add dev eth0 protocol ip parent 1: handle 3 fw flowid 1:100
 ##############ISLAM##########################
-$TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.20 flowid 1:20
+$IPT -t mangle -A FORWARD -i eth0 -d 192.168.1.20 -j MARK --set-mark 2
+$TC filter add dev eth0 protocol ip parent 1: handle 2 fw flowid 1:20
+#$TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.20 flowid 1:20
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.21 flowid 1:21
 ##############HAMDY##########################
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.30 flowid 1:30
