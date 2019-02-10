@@ -109,3 +109,6 @@ iptables -t mangle -F
 
 
 tc -s class show dev eth0
+
+Get current date with defined format and set variable
+DATE=$(date +"%Y%m%d%H%M")
