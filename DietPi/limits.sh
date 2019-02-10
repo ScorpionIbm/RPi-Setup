@@ -5,8 +5,8 @@ IPT=/sbin/iptables
 #TC
 TC=/sbin/tc
 #Download
-DL=1000Kbit
-DL_Ceil=1000Kbit
+DL=900Kbit
+DL_Ceil=900Kbit
 #Upload
 UL=900Kbit
 UL_Ceil=900Kbit
@@ -15,18 +15,18 @@ UL_Prio=0
 quantum=300
 #User Speed
 U_DL=500Kbit
-U_DL_Ceil=1000Kbit
+U_DL_Ceil=900Kbit
 #PC Speed
 PC_DL=500Kbit
-PC_DL_Ceil=1000Kbit
+PC_DL_Ceil=900Kbit
 PC_DL_Prio=2
 #Mobile Speed
 M_DL=450Kbit
-M_DL_Ceil=1000Kbit
+M_DL_Ceil=900Kbit
 M_DL_Prio=5
 #Guest Speed
-G_DL=1000Kbit
-G_DL_Ceil=1000Kbit
+G_DL=400Kbit
+G_DL_Ceil=400Kbit
 G_DL_Prio=7
 #############SETUP VARIABLES###############################################################################################
 #############SETUP BASE CONNECTION#########################################################################################
@@ -87,15 +87,19 @@ $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.41 flow
 ##############MARAM##########################
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.50 flowid 1:50
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.51 flowid 1:51
-##############MAMA##########################
+##############MAMA###########################
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.60 flowid 1:60
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.61 flowid 1:61
-##############BABA##########################
+##############BABA###########################
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.70 flowid 1:70
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.71 flowid 1:71
-##############SERVERS#######################
+##############SERVERS########################
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip src 192.168.1.10 flowid 1:1
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.10 flowid 1:1
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip src 192.168.1.5 flowid 1:1
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.5 flowid 1:1
+##############GUESTS#########################
+$IPT -t mangle -A FORWARD -i eth0 -m iprange --dst-range 192.168.1.200-192.168.1.254 -j MARK --set-mark 9
+$IPT -t mangle -A FORWARD -i eth0 -m iprange --src-range 192.168.1.200-192.168.1.254 -j MARK --set-mark 9
+$TC filter add dev eth0 protocol ip parent 1: handle 9 fw flowid 1:200
 #############SETUP ROUTING FILTERS#########################################################################################
