@@ -35,4 +35,21 @@ tc filter add dev eth0 parent 1: protocol ip handle 7 fw flowid 1:70
 
 
 
+	#iptables -t mangle -A PREROUTING -d 192.168.1.20/32 -j MARK --set-mark 2
+	#OR
+	#iptables -t mangle -A PREROUTING -i eth0 -j MARK --set-mark 2
+	#OR
+	#iptables -t mangle -A PREROUTING -i eth0 -d 192.168.1.20/32 -j MARK --set-mark 2
+	#iptables -t mangle -A PREROUTING -i eth0 -d 192.168.1.20/32 -j RETURN
+	#iptables -t mangle -A PREROUTING -i eth0 -j MARK --set-mark 5
+	#$TC filter add dev eth0 protocol ip parent 1: handle 2 fw flowid 1:100
+	#$TC class add dev eth0 parent 1:1 classid 1:100 htb rate 700Kbit ceil 700Kbit prio $P_Prio
+
+DOWNLOAD
+$TC filter add dev eth0 protocol ip parent 1: handle 2 fw flowid 1:20
+iptables -t mangle -A FORWARD -i eth0 -d 192.168.1.20 -j MARK --set-mark 2
+
+UPLOAD
+$TC filter add dev eth0 protocol ip parent 1: handle 3 fw flowid 1:100
+iptables -t mangle -A FORWARD -i eth0 -s 192.168.1.20 -j MARK --set-mark 3
 
