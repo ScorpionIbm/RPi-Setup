@@ -1,5 +1,7 @@
 #!/bin/bash
+
 #############SETUP VARIABLES###############################################################################################
+
 #IPTABLES
 IPT=/sbin/iptables
 #TC
@@ -14,21 +16,31 @@ UL_Prio=0
 #FQ_CODEL
 quantum=300
 #User Speed
+#U_DL=$[DL/5]Kbit
+#U_DL_Ceil=$[3*DL_Ceil/10]Kbit
 U_DL=500Kbit
 U_DL_Ceil=900Kbit
 #PC Speed
+#PC_DL=$[DL/5]Kbit
+#PC_DL_Ceil=$[DL_Ceil/5]Kbit
 PC_DL=500Kbit
 PC_DL_Ceil=900Kbit
 PC_DL_Prio=2
 #Mobile Speed
+#M_DL=$[DL/10]Kbit
+#M_DL_Ceil=$[DL_Ceil/5]Kbit
 M_DL=450Kbit
 M_DL_Ceil=900Kbit
 M_DL_Prio=5
 #Guest Speed
+#G_DL=$[DL/5]Kbit
+#G_DL_Ceil=$[DL_Ceil/5]Kbit
 G_DL=400Kbit
 G_DL_Ceil=400Kbit
 G_DL_Prio=7
 #############SETUP VARIABLES###############################################################################################
+
+start() {
 #############SETUP BASE CONNECTION#########################################################################################
 $TC qdisc add dev eth0 root handle 1: htb default 100
 #############SETUP BASE CONNECTION#########################################################################################
@@ -74,8 +86,8 @@ $TC class add dev eth0 parent 1: classid 1:200 htb rate $G_DL ceil $G_DL_Ceil pr
 #$IPT -t mangle -A POSTROUTING -o eth0 -m iprange --src-range 192.168.1.20-192.168.1.254 -j MARK --set-mark 3
 #$TC filter add dev eth0 protocol ip parent 1: handle 3 fw flowid 1:100
 ##############ISLAM##########################
-$IPT -t mangle -A FORWARD -i eth0 -d 192.168.1.20 -j MARK --set-mark 2
-$TC filter add dev eth0 protocol ip parent 1: handle 2 fw flowid 1:20
+$IPT -t mangle -A FORWARD -i eth0 -d 192.168.1.20 -j MARK --set-mark 20
+$TC filter add dev eth0 protocol ip parent 1: handle 20 fw flowid 1:20
 #$TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.20 flowid 1:20
 $TC filter add dev eth0 protocol ip parent 1: u32 match ip dst 192.168.1.21 flowid 1:21
 ##############HAMDY##########################
@@ -103,3 +115,30 @@ $IPT -t mangle -A FORWARD -i eth0 -m iprange --dst-range 192.168.1.200-192.168.1
 $IPT -t mangle -A FORWARD -i eth0 -m iprange --src-range 192.168.1.200-192.168.1.254 -j MARK --set-mark 9
 $TC filter add dev eth0 protocol ip parent 1: handle 9 fw flowid 1:200
 #############SETUP ROUTING FILTERS#########################################################################################
+}
+
+stop() {
+    $IPT -t mangle -F
+	$TC qdisc del dev eth0 root
+}
+
+case "$1" in
+    'start')
+            start
+            ;;
+    'stop')
+            stop
+            ;;
+    'restart')
+            stop ; echo "Sleeping..."; sleep 3 ;
+            start
+            ;;
+    *)
+            echo
+            echo "Usage: $0 { start | stop | restart }"
+            echo
+            exit 1
+            ;;
+esac
+
+exit 0
