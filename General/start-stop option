@@ -1,0 +1,26 @@
+#!/bin/bash
+
+start() {
+    echo "process started"
+}
+
+stop() {
+    echo "process stop"
+}
+
+case "$1" in
+    'start')
+            start
+            ;;
+    'stop')
+            stop
+            ;;
+    *)
+            echo
+            echo "Usage: $0 { start | stop | restart | status }"
+            echo
+            exit 1
+            ;;
+esac
+
+exit 0
