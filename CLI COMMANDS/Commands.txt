@@ -112,3 +112,14 @@ tc -s class show dev eth0
 
 Get current date with defined format and set variable
 DATE=$(date +"%Y%m%d%H%M")
+
+
+nano /etc/lighttpd/vhosts.d/PHproxy.conf
+
+nano /etc/lighttpd/lighttpd.conf
+
+nano /hash.sh
+
+/hash.sh 'Scorpion_Ibm' 'Password protected area' 'Doctor_Ibm93'
+
+/etc/init.d/bandwidthd start
