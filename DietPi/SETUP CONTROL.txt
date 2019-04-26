@@ -6,11 +6,6 @@ DietPi
 	add second IP (for Pihole and darkstat together)
 		ip addr add 192.168.1.10/24 dev eth0
 		and add to /etc/rc.local
-			OR
-		/etc/network/interfaces
-			#Secondary IP-address
-			iface eth0 static
-				address 192.168.1.10/24
 	Install PiHole
 
 PiHole
@@ -21,6 +16,8 @@ PiHole
 			expand-hosts
 			bind-interfaces
 			dhcp-sequential-ip
+			addn-hosts=/etc/pihole/local.list
+			hostsdir=/etc/localnetwork
 
 			##############GUEST IP RANGE#######################
 
@@ -29,45 +26,25 @@ PiHole
 			##############BLOCK Ads############################
 
 			#Islam
-							dhcp-host=00:1b:b1:a2:70:4a,192.168.1.20,Islam-PC
-							dhcp-host=00:be:3b:b9:51:fa,192.168.1.21,Islam-Phone
+					dhcp-host=00:1b:b1:a2:70:4a,192.168.1.20,Islam-PC,infinite
+					dhcp-host=00:be:3b:b9:51:fa,192.168.1.21,Islam-Phone,infinite
 			#Hamdy
-							dhcp-host=78:24:af:e3:df:ad,192.168.1.30,Hamdy-PC
-							dhcp-host=f4:f5:db:f4:0a:63,192.168.1.31,Hamdy-Phone
+					dhcp-host=78:24:af:e3:df:ad,192.168.1.30,Hamdy-PC,infinite
+					dhcp-host=f4:f5:db:f4:0a:63,192.168.1.31,Hamdy-Phone,infinite
+					dhcp-host=00:16:EA:51:AF:46,192.168.1.32,Hamdy-PC2,infinite
 			#Ahmed
-							dhcp-host=d0:53:49:5a:e3:d7,192.168.1.40,Ahmed-PC
-							dhcp-host=58:48:22:eb:11:06,192.168.1.41,Ahmed-Phone
+					dhcp-host=d0:53:49:5a:e3:d7,192.168.1.40,Ahmed-PC,infinite
+					dhcp-host=58:48:22:eb:11:06,192.168.1.41,Ahmed-Phone,infinite
 			#Maram
-							dhcp-host=c8:21:58:98:92:25,192.168.1.50,Maram-PC
-							dhcp-host=c0:17:4d:fb:6f:56,192.168.1.51,Maram-Phone
+					dhcp-host=c8:21:58:98:92:25,192.168.1.50,Maram-PC,infinite
+					dhcp-host=c0:17:4d:fb:6f:56,192.168.1.51,Maram-Phone,infinite
 			#Mama
-							#dhcp-host=c0:17:4d:fb:6f:56,192.168.1.61,Mama-Phone
+					dhcp-host=30:A8:DB:C8:C4:E3,192.168.1.61,Mama-Phone,infinite
 			#Baba
-							dhcp-host=94:39:e5:ec:27:21,192.168.1.70,Baba-PC
-							dhcp-host=bc:b3:08:bd:7c:8a,192.168.1.71,Baba-Phone
-
-
-			###############NO BLOCK Ads####################
-
-			#dhcp-option=tag:ads,option:6,8.8.8.8,8.8.4.4
-
-			#Islam
-			#				dhcp-host=00:1b:b1:a2:70:4a,set:ads,192.168.1.20,Islam-PC
-			#				dhcp-host=00:be:3b:b9:51:fa,set:ads,192.168.1.21,Islam-Phone
-			#Hamdy
-			#				dhcp-host=78:24:af:e3:df:ad,set:ads,192.168.1.30,Hamdy-PC
-			#				dhcp-host=f4:f5:db:f4:0a:63,set:ads,192.168.1.31,Hamdy-Phone
-			#Ahmed
-			#				dhcp-host=d0:53:49:5a:e3:d7,set:ads,192.168.1.40,Ahmed-PC
-			#				dhcp-host=58:48:22:eb:11:06,set:ads,192.168.1.41,Ahmed-Phone
-			#Maram
-			#				dhcp-host=c8:21:58:98:92:25,set:ads,192.168.1.50,Maram-PC
-			#				dhcp-host=c0:17:4d:fb:6f:56,set:ads,192.168.1.51,Maram-Phone
-			#Mama
-			#				dhcp-host=c0:17:4d:fb:6f:56,set:ads,192.168.1.61,Mama-Phone
-			#Baba
-			#				dhcp-host=94:39:e5:ec:27:21,set:ads,192.168.1.70,Baba-PC
-			#				dhcp-host=bc:b3:08:bd:7c:8a,set:ads,192.168.1.71,Baba-Phone
+					dhcp-host=94:39:e5:ec:27:21,192.168.1.70,Baba-PC,infinite
+					dhcp-host=CC:FA:00:AF:61:4E,192.168.1.71,Baba-Phone,infinite
+					dhcp-host=00:32:05:A0:EE:2D,192.168.1.72,INAR,infinite
+					#dhcp-host=bc:b3:08:bd:7c:8a,192.168.1.71,Baba-Phone,infinite
 
 IPTABLES
 		apt install iptables
@@ -87,9 +64,44 @@ IPTABLES
 lighttpd
 	Change bind server, redirect and disable IPv6
 		/etc/lighttpd/lighttpd.conf
+			server.tag = ""
+			server.document-root        = "/var/www/admin"
 			server.bind                 = "192.168.1.5"
-			url.redirect = ( "^/$" => "http://pi.hole/admin" )
+			#url.redirect = ( "^/$" => "http://pi.hole/admin" )
 			#include_shell "/usr/share/lighttpd/use-ipv6.pl " + server.port
+		
+			#For extra sites
+			include_shell "cat /etc/lighttpd/vhosts.d/*.conf"
+		
+		/etc/lighttpd/vhosts.d/RemoteWeb.conf
+			#server.modules = (
+			#        "mod_access",
+			#        "mod_alias",
+			#        "mod_compress",
+			#        "mod_redirect",
+			#        "mod_auth",
+			#)
+			#
+
+			auth.debug = 0
+			auth.backend = "htdigest"
+			auth.backend.htdigest.userfile = "/.lighttpdpassword"
+
+			$SERVER["socket"] == "192.168.1.6:80" {
+			server.document-root        = "/var/www/RemoteWeb"
+			dir-listing.activate = "enable"
+			#server.errorlog             = "/var/log/lighttpd/error1.log"
+			#server.port                 = 8080
+			#server.bind                 = "192.168.1.6"
+			auth.require = ( "/" =>
+			(
+			"method" => "digest",
+			"realm" => "Password protected area",
+			"require" => "valid-user"
+			)
+			)
+			}
+
 iftop
 	apt install libpcap libpcap-dev libncurses5 libncurses5-dev
 	apt install iftop
@@ -105,7 +117,7 @@ darkstat
 			#LOCAL="-l 192.168.1.0/255.255.255.0"
 			FILTER="not (src net 192.168.1.0/24 and dst net 192.168.1.0/24)"
 	add to /etc/init.d/darkstat to appropriate lines in start/stop/restart 
-		ip addr add 192.168.1.10/24 dev eth0"
+		"ip addr add 192.168.1.10/24 dev eth0"
 		"ip addr del 192.168.1.10/24 dev eth0" 
 	
 	service darkstat start
@@ -114,8 +126,21 @@ darkstat
 		#!/bin/bash
 		sudo kill -SIGUSR2 $(pgrep -o darkstat)
 	make /etc/cron.hourly/darkstat executable
+	Create Cron job in /etc/cron.hourly/darkstat to save monthly data to /mnt/dietpi_userdata/darkstat_backup
+		#!/bin/bash
+		date=$(date +"%m_%Y")
+		filename="/mnt/dietpi_userdata/darkstat_backup/darkstat_$date.db"
+		sudo kill -SIGUSR2 $(pgrep -o darkstat)
+		sudo service darkstat stop
+		sudo mv /var/lib/darkstat/darkstat.db $filename
+		sudo service darkstat start
+		make /etc/cron.monthly/darkstat executable
 
 bandwidthd
 	apt install bandwidthd
 	/etc/init.d/bandwidthd start
 	Create a link in /var/www linking to /var/lib/bandwidthd/htdocs
+
+Haveged
+	apt install haveged
+	update-rc.d haveged defaults
