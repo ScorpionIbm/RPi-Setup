@@ -107,6 +107,8 @@ tc filter show dev eth0
 
 iptables -t mangle -F
 
+to grep a number of lines
+	tc -s class show dev eth0 | grep "class htb 1:2" -A 5
 
 tc -s class show dev eth0
 
@@ -123,3 +125,8 @@ nano /hash.sh
 /hash.sh 'Scorpion_Ibm' 'Password protected area' 'Doctor_Ibm93'
 
 /etc/init.d/bandwidthd start
+
+
+systemctl status pihole-FTL
+
+pihole checkout ftl v4.1.2
