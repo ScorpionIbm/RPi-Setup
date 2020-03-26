@@ -58,7 +58,7 @@ IPTABLES
 	IPtables restore (different files for each set of rules)
 			iptables-save -t nat > /etc/iptables.ipv4.nat
 			iptables-save -t filter > /etc/iptables-firewall.ipv4.nat
-		/etc/rc.local
+		/etc/rc.local OR (DIetPi: /var/lib/dietpi/postboot.d)
 			iptables-restore < /etc/iptables.ipv4.nat
 			iptables-restore < /etc/iptables-firewall.ipv4.nat
 lighttpd
@@ -74,25 +74,12 @@ lighttpd
 			include_shell "cat /etc/lighttpd/vhosts.d/*.conf"
 		
 		/etc/lighttpd/vhosts.d/RemoteWeb.conf
-			#server.modules = (
-			#        "mod_access",
-			#        "mod_alias",
-			#        "mod_compress",
-			#        "mod_redirect",
-			#        "mod_auth",
-			#)
-			#
-
-			auth.debug = 0
 			auth.backend = "htdigest"
 			auth.backend.htdigest.userfile = "/.lighttpdpassword"
 
 			$SERVER["socket"] == "192.168.1.6:80" {
 			server.document-root        = "/var/www/RemoteWeb"
 			dir-listing.activate = "enable"
-			#server.errorlog             = "/var/log/lighttpd/error1.log"
-			#server.port                 = 8080
-			#server.bind                 = "192.168.1.6"
 			auth.require = ( "/" =>
 			(
 			"method" => "digest",
@@ -100,6 +87,10 @@ lighttpd
 			"require" => "valid-user"
 			)
 			)
+			}
+		/etc/lighttpd/vhosts.d/netdata.conf
+			$SERVER["socket"] == "192.168.1.7:80" {
+				proxy.server  = ( "" => ( ( "host" => "127.0.0.1", "port" => 8080 )))
 			}
 
 iftop
@@ -139,8 +130,18 @@ darkstat
 bandwidthd
 	apt install bandwidthd
 	/etc/init.d/bandwidthd start
+	update-rc.d bandwidthd defaults
 	Create a link in /var/www linking to /var/lib/bandwidthd/htdocs
+	adjust /etc/init.d/bandwidthd to add $network and networking to required start and stop
+		# Required-Start:    $syslog $remote_fs $network networking
+		# Required-Stop:     $syslog $remote_fs $network networking
+
 
 Haveged
 	apt install haveged
 	update-rc.d haveged defaults
+
+NTP servers
+	213.251.52.217
+	217.114.59.66
+

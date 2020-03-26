@@ -7,6 +7,8 @@ view log
 	less /var/log/syslog
 	tail -f /var/log/syslog
 	dmesg -T
+	more /var/log/syslog | grep ""
+	
 Turn off power save
 	post-up iw dev $IFACE set power_save off
 
@@ -103,7 +105,8 @@ Check installed version of package
 tc qdisc show
 tc class show dev eth0
 tc filter show dev eth0
-
+tc -g -s class show dev eth0
+tc -g -s -nm class show dev eth0
 
 iptables -t mangle -F
 
@@ -126,7 +129,27 @@ nano /hash.sh
 
 /etc/init.d/bandwidthd start
 
+update-rc.d haveged defaults
+update-rc.d custom remove
+update-rc.d custom disable
+service --status-all
+
 
 systemctl status pihole-FTL
 
 pihole checkout ftl v4.1.2
+
+systemctl status dropbear.service -n 50
+
+systemd-analyze time
+systemd-analyze blame
+systemd-analyze critical-chain
+
+updatedb
+locate conf.d
+
+lighttpd -v
+
+ip a show eth0 up
+
+uname -r
