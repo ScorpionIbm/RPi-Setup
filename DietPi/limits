@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #FQ_Codel
 #############SETUP VARIABLES###############################################################################################
 
@@ -38,7 +38,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	quantum_UP="noecn limit 1000"
 
 #PFIFO
-	limit=1000p
+	limit=1000
 
 #RATES
 
