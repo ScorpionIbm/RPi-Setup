@@ -24,9 +24,9 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 #Bandwidth
 	Local=100
-	Download=4500
+	Download=$2
 	Upload=900
-	Guest=400
+	Guest=300
 	Games_DOWN=4500
 	Games_UP=4500
 
@@ -52,7 +52,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	User_DL=$[Download/6]Kbit
 	User_DL_Ceil=$[Download/4]Kbit
 	#Guest Speed
-	Guest_DL=$[Guest]Kbit
+	Guest_DL=1Kbit
 	Guest_DL_Ceil=$[Guest]Kbit
 	#Games Speed
 	Games_DL=$[Games_DOWN]Kbit
@@ -195,7 +195,10 @@ iptables -t mangle -A POSTROUTING -p tcp -m tcp --tcp-flags SYN,RST,ACK SYN -j R
 #iptables -t mangle -A POSTROUTING -p tcp -s 192.168.1.1/32 -j RETURN
 #iptables -t mangle -A POSTROUTING -p tcp -d 192.168.1.1/32 -j CLASSIFY --set-class 1:11
 #iptables -t mangle -A POSTROUTING -p tcp -d 192.168.1.1/32 -j RETURN
-###############GUESTS#########################
+##############NEW_PI#########################
+iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.100-192.168.1.101 -j CLASSIFY --set-class 1:1
+iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.100-192.168.1.101 -j RETURN
+##############GUESTS#########################
 iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.80-192.168.1.254 -j CLASSIFY --set-class 1:8
 iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.80-192.168.1.254 -j RETURN
 iptables -t mangle -A POSTROUTING -o $iface -m iprange --src-range 192.168.1.80-192.168.1.254 -j CLASSIFY --set-class 1:8
@@ -260,7 +263,7 @@ case "$1" in
             ;;
     'restart')
             limits stop ; echo "Sleeping..."; sleep 2 ;
-            limits start
+            limits start $2
             ;;
     *)
             echo
