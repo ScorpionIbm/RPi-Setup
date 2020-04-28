@@ -3,48 +3,101 @@ DietPi
 	IPv4 Forward
 		/etc/sysctl.conf
 			net.ipv4.ip_forward=1
-	add second IP (for Pihole and darkstat together)
-		ip addr add 192.168.1.10/24 dev eth0
-		and add to /etc/rc.local
+	add second IP (for Pihole and darkstat together) file in /etc/init.d
+		#! /bin/ship addr add 192.168.1.10/24 dev eth0
+		### BEGIN INIT INFOand add to /etc/rc.local
+		# Provides:          extraIP
+		# Required-Start: $network networking
+		# Required-Stop:  $network networking
+		# Default-Start:     2 3 4 5
+		# Default-Stop:      0 1 6
+		# X-Start-Before: darkstat lighttpd
+		# X-Stop-After: darkstat lighttpd
+		# Short-Description: Create IP for extra services
+		### END INIT INFO
+		
+		PATH=/bin:/usr/bin:/sbin:/usr/sbin
+		
+		startip() {
+		    ip addr add 192.168.1.6/24 dev eth0
+		    ip addr add 192.168.1.7/24 dev eth0
+		    ip addr add 192.168.1.10/24 dev eth0
+		}
+		
+		stopip() {
+		    ip addr del 192.168.1.6/24 dev eth0
+		    ip addr del 192.168.1.7/24 dev eth0
+		    ip addr del 192.168.1.10/24 dev eth0
+		}
+		
+		case "$1" in
+		start)
+		    startip
+		    ;;
+		stop)
+		    stopip
+		    ;;
+		restart|reload|force-reload)
+		    stopip
+			sleep 1
+		    startip
+		    ;;
+		*)
+			echo
+		    echo "Usage: $0 { start | stop | restart | reload | force-reload}"
+		    echo
+		    exit 1
+		    ;;
+		esac
+		
+		exit 0
+		
+		
 	Install PiHole
 
 PiHole
 	add static Client IPs and bind interfaces
 		/etc/dnsmasq.d/04-pihole-static-dhcp.conf
-			###############Extra DNSMASQ Settings###############
-
+			###############Extra DNSMASQ Settings###############			
 			expand-hosts
 			bind-interfaces
-			dhcp-sequential-ip
-			addn-hosts=/etc/pihole/local.list
+			listen-address=127.0.0.1
+			listen-address=192.168.1.5
+            dhcp-sequential-ip
 			hostsdir=/etc/localnetwork
-
-			##############GUEST IP RANGE#######################
-
-			dhcp-range=tag:!known,192.168.1.100,192.168.1.150,2h
-
+            ##############GUEST IP RANGE#######################
+			
+            dhcp-range=tag:!known,192.168.1.100,192.168.1.150,2h
+			#dhcp-ignore=tag:!known
+            
 			##############BLOCK Ads############################
-
+			
 			#Islam
-					dhcp-host=00:1b:b1:a2:70:4a,192.168.1.20,Islam-PC,infinite
-					dhcp-host=00:be:3b:b9:51:fa,192.168.1.21,Islam-Phone,infinite
+					dhcp-host=00:1b:b1:a2:70:4a,192.168.1.20,Islam-C1,infinite
+					dhcp-host=00:be:3b:b9:51:fa,192.168.1.21,Islam-P1,infinite
+					dhcp-host=48:FD:A3:16:FE:8F,192.168.1.22,Islam-T1,infinite
+					dhcp-host=66:2F:DB:2E:92:63,192.168.1.23,Islam-P2,infinite
 			#Hamdy
-					dhcp-host=78:24:af:e3:df:ad,192.168.1.30,Hamdy-PC,infinite
-					dhcp-host=f4:f5:db:f4:0a:63,192.168.1.31,Hamdy-Phone,infinite
-					dhcp-host=00:16:EA:51:AF:46,192.168.1.32,Hamdy-PC2,infinite
+					dhcp-host=78:24:af:e3:df:ad,192.168.1.30,Hamdy-C1,infinite
+					dhcp-host=f4:f5:db:f4:0a:63,192.168.1.31,Hamdy-P1,infinite
+					dhcp-host=00:16:EA:51:AF:46,192.168.1.32,Hamdy-C2,infinite
 			#Ahmed
-					dhcp-host=d0:53:49:5a:e3:d7,192.168.1.40,Ahmed-PC,infinite
-					dhcp-host=58:48:22:eb:11:06,192.168.1.41,Ahmed-Phone,infinite
+					dhcp-host=d0:53:49:5a:e3:d7,192.168.1.40,Ahmed-C1,infinite
+					dhcp-host=58:48:22:eb:11:06,192.168.1.41,Ahmed-P1,infinite
+					dhcp-host=B0:E1:7E:1E:B9:7F,192.168.1.42,Ahmed-T1,infinite
 			#Maram
-					dhcp-host=c8:21:58:98:92:25,192.168.1.50,Maram-PC,infinite
-					dhcp-host=c0:17:4d:fb:6f:56,192.168.1.51,Maram-Phone,infinite
+					dhcp-host=c8:21:58:98:92:25,192.168.1.50,Maram-C1,infinite
+					dhcp-host=c0:17:4d:fb:6f:56,192.168.1.51,Maram-P1,infinite
 			#Mama
-					dhcp-host=30:A8:DB:C8:C4:E3,192.168.1.61,Mama-Phone,infinite
-			#Baba
-					dhcp-host=94:39:e5:ec:27:21,192.168.1.70,Baba-PC,infinite
-					dhcp-host=CC:FA:00:AF:61:4E,192.168.1.71,Baba-Phone,infinite
-					dhcp-host=00:32:05:A0:EE:2D,192.168.1.72,INAR,infinite
-					#dhcp-host=bc:b3:08:bd:7c:8a,192.168.1.71,Baba-Phone,infinite
+					dhcp-host=30:A8:DB:C8:C4:E3,192.168.1.61,Mama-P1,infinite
+            		dhcp-host=7C:D6:61:BC:FB:B9,192.168.1.62,Mama-P2,infinite
+            #Baba
+            		dhcp-host=94:39:e5:ec:27:21,192.168.1.70,Baba-C1,infinite
+            		dhcp-host=CC:FA:00:AF:61:4E,192.168.1.71,Baba-P1,infinite
+            		dhcp-host=00:32:05:A0:EE:2D,192.168.1.72,Baba-T1,infinite
+            		dhcp-host=64:89:9a:67:32:b2,192.168.1.73,Baba-P2,infinite
+            		dhcp-host=70:3A:51:95:FA:4E,192.168.1.74,Baba-P3,infinite
+            		#dhcp-host=bc:b3:08:bd:7c:8a,192.168.1.71,Baba-P0,infinite
 
 IPTABLES
 		apt install iptables
@@ -53,7 +106,7 @@ IPTABLES
 		OR
 		iptables -t nat -A POSTROUTING -m iprange --src-range 192.168.1.2-192.168.1.254 -o eth0 -j SNAT --to-source 192.168.1.5
 	Firewall ports
-		iptables -A INPUT -d 192.168.1.10/32 -i eth0 -p tcp -m iprange --src-range 192.168.1.20-192.168.1.21 -m tcp --dport 80 -j ACCEPT
+		iptables -A INPUT -d 192.168.1.10/32 -i eth0 -p tcp -m iprange --src-range 192.168.1.20-192.168.1.23 -m tcp --dport 80 -j ACCEPT
 		iptables -A INPUT -d 192.168.1.10/32 -i eth0 -p tcp -m tcp --dport 80 -j REJECT --reject-with tcp-reset
 	IPtables restore (different files for each set of rules)
 			iptables-save -t nat > /etc/iptables.ipv4.nat
