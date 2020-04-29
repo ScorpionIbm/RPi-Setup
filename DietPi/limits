@@ -10,7 +10,6 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 #Interface
 	iface=eth0
-#	ifb=ifb0
 
 #Priority
 	High_Prio=0
@@ -34,11 +33,10 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	#quant="quantum 1474"
 
 #FQ_CODEL
-	quantum="quantum 300"
-	quantum_UP="noecn limit 1000"
+	fq_codel="fq_codel quantum 300"
 
 #PFIFO
-	limit=1000
+	pfifo="pfifo limit 1000"
 
 #RATES
 
@@ -64,178 +62,100 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	Local_Ceil=$[Local]Mbit
 #############SETUP VARIABLES###############################################################################################
 
+user_limit() {
+	tc class add dev $iface parent 1:1 classid 1:$1 htb rate $2 ceil $3 prio $4 $5
+		tc qdisc add dev $iface parent 1:$1 $6
+}
+IPT_range() {
+	iptables -t mangle -A POSTROUTING -o $iface -m iprange $1 -j CLASSIFY --set-class 1:$2
+	iptables -t mangle -A POSTROUTING -o $iface -m iprange $1 -j RETURN
+}
+tc_setup() {
+	#############SETUP BASE CONNECTION#########################################################################################
+	tc qdisc add dev $iface root handle 1: htb default 100
+	#############SETUP BASE CONNECTION#########################################################################################
+
+	#############SETUP CLASSES#################################################################################################
+
+	####INTERNET
+		tc class add dev $iface parent 1: classid 1:1 htb rate $DL ceil $DL_Ceil prio $DL_Prio $quant
+			##############ISLAM##########################
+			user_limit 2 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel"
+			##############HAMDY##########################
+			user_limit 3 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel"
+			##############AHMED##########################
+			user_limit 4 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel"
+			##############MARAM##########################
+			user_limit 5 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel"
+			##############MAMA###########################
+			user_limit 6 $User_DL $User_DL $Low_Prio "$quant" "$fq_codel"
+			##############BABA###########################
+			user_limit 7 $User_DL $User_DL $Low_Prio "$quant" "$fq_codel"
+			##############GUESTS##########################
+			user_limit 8 $Guest_DL $Guest_DL_Ceil $Guest_Prio "$quant" "$fq_codel"
+			###############GAMES_DOWN#####################
+			user_limit 21 $Games_DL $Games_DL_Ceil $High_Prio "$quant" "$pfifo"
+			###############GAMES_UP#######################
+			user_limit 20 $Games_UL $Games_UL_Ceil $High_Prio "$quant" "$pfifo"
+			##############UPLOAD#########################
+			user_limit 100 $UL $UL_Ceil $UL_Prio "$quant" "$pfifo"
+		#CONNECTION_INITIATION
+		user_limit 10 $UL $UL_Ceil $UL_Prio "$quant" "$pfifo"
+	####LOCAL
+		#LOCAL
+		user_limit 9 $Local_DL $Local_Ceil $Local_Prio "$quant" "$fq_codel"
+	#############SETUP CLASSES#################################################################################################
+}
+IPT_setup() {
+	#############SETUP IPTABLES################################################################################################
+
+	##############GAME PRIORITIZE################
+		#GAMES_UP
+		#LOL
+		iptables -t mangle -A POSTROUTING -p udp -m multiport --dports 5000:5500,8088 -j CONNMARK --set-mark 20
+		iptables -t mangle -A POSTROUTING -p tcp -m multiport --dports 8393:8400,2099,5223,5222,8088 -j CONNMARK --set-mark 20
+		iptables -t mangle -A POSTROUTING -m connmark --mark 20 -j CLASSIFY --set-class 1:20
+		iptables -t mangle -A POSTROUTING -m connmark --mark 20 -j RETURN
+		#GAMES_DOWN
+		#LOL
+		iptables -t mangle -A POSTROUTING -p udp -m multiport --sports 5000:5500,8088 -j CONNMARK --set-mark 21
+		iptables -t mangle -A POSTROUTING -p tcp -m multiport --sports 8393:8400,2099,5223,5222,8088 -j CONNMARK --set-mark 21
+		iptables -t mangle -A POSTROUTING -m connmark --mark 21 -j CLASSIFY --set-class 1:21
+		iptables -t mangle -A POSTROUTING -m connmark --mark 21 -j RETURN
+	###############TCP CONNECTION START###########
+	iptables -t mangle -A POSTROUTING -p icmp -j CLASSIFY --set-class 1:10
+	iptables -t mangle -A POSTROUTING -p icmp -j RETURN
+	iptables -t mangle -A POSTROUTING -p tcp -m tcp --tcp-flags SYN,RST,ACK SYN -j CLASSIFY --set-class 1:10
+	iptables -t mangle -A POSTROUTING -p tcp -m tcp --tcp-flags SYN,RST,ACK SYN -j RETURN
+	##############NEW_PI#########################
+	IPT_range "--dst-range 192.168.1.18-192.168.1.19" 1
+	##############GUESTS#########################
+	IPT_range "--dst-range 192.168.1.80-192.168.1.254" 8
+	IPT_range "--src-range 192.168.1.80-192.168.1.254" 8
+	##############LOCAL##########################
+	IPT_range "--dst-range 192.168.1.2-192.168.1.254 --src-range 192.168.1.2-192.168.1.254" 9
+	##############ISLAM##########################
+	IPT_range "--dst-range 192.168.1.20-192.168.1.29" 2
+	##############HAMDY##########################
+	IPT_range "--dst-range 192.168.1.30-192.168.1.39" 3
+	##############AHMED##########################
+	IPT_range "--dst-range 192.168.1.40-192.168.1.49" 4
+	##############MARAM##########################
+	IPT_range "--dst-range 192.168.1.50-192.168.1.59" 5
+	##############MAMA###########################
+	IPT_range "--dst-range 192.168.1.60-192.168.1.69" 6
+	##############BABA###########################
+	IPT_range "--dst-range 192.168.1.70-192.168.1.79" 7
+	#############SETUP ROUTING FILTERS#########################################################################################
+}
+
 start() {
-#########IFB################
-#modprobe ifb
-#ip link set dev $ifb up
-#tc qdisc add dev $iface ingress handle ffff:
-#	tc filter add dev $iface parent ffff: protocol ip u32 match u32 0 0 action mirred egress redirect dev $ifb flowid ffff:1
-#
-#tc qdisc add dev $ifb root handle 3: htb default 30
-#	tc class add dev $ifb parent 3:3 classid 3:30 htb rate $Local_DL ceil $Local_Ceil
-#		tc qdisc add dev $ifb parent 3:30 fq_codel $quantum
-#########IFB################
-
-
-#############SETUP BASE CONNECTION#########################################################################################
-tc qdisc add dev $iface root handle 1: htb default 100
-#############SETUP BASE CONNECTION#########################################################################################
-
-#############SETUP CLASSES#################################################################################################
-
-####INTERNET
-	tc class add dev $iface parent 1: classid 1:1 htb rate $DL ceil $DL_Ceil prio $DL_Prio $quant
-		##############ISLAM##########################
-		tc class add dev $iface parent 1:1 classid 1:2 htb rate $User_DL ceil $User_DL_Ceil prio $User_Prio $quant
-			tc qdisc add dev $iface parent 1:2 fq_codel $quantum
-#			tc qdisc add dev $iface parent 1:2 sfq perturb 10
-		##############HAMDY##########################
-		tc class add dev $iface parent 1:1 classid 1:3 htb rate $User_DL ceil $User_DL_Ceil prio $User_Prio $quant
-			tc qdisc add dev $iface parent 1:3 fq_codel $quantum
-#			tc qdisc add dev $iface parent 1:3 sfq perturb 10
-		##############AHMED##########################
-		tc class add dev $iface parent 1:1 classid 1:4 htb rate $User_DL ceil $User_DL_Ceil prio $User_Prio $quant
-			tc qdisc add dev $iface parent 1:4 fq_codel $quantum
-#			tc qdisc add dev $iface parent 1:4 sfq perturb 10
-		##############MARAM##########################
-		tc class add dev $iface parent 1:1 classid 1:5 htb rate $User_DL ceil $User_DL_Ceil prio $User_Prio $quant
-			tc qdisc add dev $iface parent 1:5 fq_codel $quantum
-#			tc qdisc add dev $iface parent 1:5 sfq perturb 10
-		##############MAMA###########################
-		tc class add dev $iface parent 1:1 classid 1:6 htb rate $User_DL ceil $User_DL prio $Low_Prio $quant
-			tc qdisc add dev $iface parent 1:6 fq_codel $quantum
-#			tc qdisc add dev $iface parent 1:6 sfq perturb 10
-		##############BABA###########################
-		tc class add dev $iface parent 1:1 classid 1:7 htb rate $User_DL ceil $User_DL prio $Low_Prio $quant
-			tc qdisc add dev $iface parent 1:7 fq_codel $quantum
-#			tc qdisc add dev $iface parent 1:7 sfq perturb 10
-		##############GUESTS##########################
-		tc class add dev $iface parent 1:1 classid 1:8 htb rate $Guest_DL ceil $Guest_DL_Ceil prio $Guest_Prio $quant
-			tc qdisc add dev $iface parent 1:8 fq_codel $quantum
-#			tc qdisc add dev $iface parent 1:8 sfq perturb 10
-		###############GAMES_DOWN#####################
-		tc class add dev $iface parent 1:1 classid 1:21 htb rate $Games_DL ceil $Games_DL_Ceil prio $High_Prio $quant
-			tc qdisc add dev $iface parent 1:21 pfifo limit $limit
-#			tc qdisc add dev $iface parent 1:21 sfq perturb 10
-		###############GAMES_UP#######################
-		tc class add dev $iface parent 1:1 classid 1:20 htb rate $Games_UL ceil $Games_UL_Ceil prio $High_Prio $quant
-			tc qdisc add dev $iface parent 1:20 pfifo limit $limit
-#			tc qdisc add dev $iface parent 1:20 sfq perturb 10
-		##############UPLOAD#########################
-		tc class add dev $iface parent 1:1 classid 1:100 htb rate $UL ceil $UL_Ceil prio $UL_Prio $quant
-			tc qdisc add dev $iface parent 1:100 fq_codel $quantum
-#			tc qdisc add dev $iface parent 1:100 sfq perturb 10
-	#CONNECTION_INITIATION
-	tc class add dev $iface parent 1: classid 1:10 htb rate $UL ceil $UL_Ceil prio $High_Prio $quant
-		tc qdisc add dev $iface parent 1:10 pfifo limit $limit
-#		tc qdisc add dev $iface parent 1:10 sfq perturb 10
-#	#ROUTER
-#	tc class add dev $iface parent 1: classid 1:11 htb rate $Local_DL ceil $Local_Ceil prio $High_Prio $quant
-#		tc qdisc add dev $iface parent 1:11 fq_codel $quantum
-##		tc qdisc add dev $iface parent 1:11 sfq perturb 10
-####LOCAL
-	#LOCAL
-	tc class add dev $iface parent 1: classid 1:9 htb rate $Local_DL ceil $Local_Ceil prio $Local_Prio
-		tc qdisc add dev $iface parent 1:9 fq_codel $quantum
-#		tc qdisc add dev $iface parent 1:9 sfq perturb 10
-#	#SSH_TO
-#	tc class add dev $iface parent 1: classid 1:30 htb rate $Local_DL ceil $Local_Ceil prio $Local_Prio
-#		tc qdisc add dev $iface parent 1:30 fq_codel $quantum
-##		tc qdisc add dev $iface parent 1:30 sfq perturb 10
-#	#SSH_FROM
-#	tc class add dev $iface parent 1: classid 1:31 htb rate $Local_DL ceil $Local_Ceil prio $Local_Prio
-#		tc qdisc add dev $iface parent 1:31 fq_codel $quantum
-##		tc qdisc add dev $iface parent 1:31 sfq perturb 10
-
-#############SETUP CLASSES#################################################################################################
-
-#############SETUP IPTABLES################################################################################################
-
-#SSH
-#iptables -t mangle -A POSTROUTING -p tcp -m tcp -d 192.168.1.5 --dport 22 -j CLASSIFY --set-class 1:30
-#iptables -t mangle -A POSTROUTING -p tcp -m tcp -d 192.168.1.5 --dport 22 -j RETURN
-#iptables -t mangle -A POSTROUTING -p tcp -m tcp -s 192.168.1.5 --sport 22 -j CLASSIFY --set-class 1:31
-#iptables -t mangle -A POSTROUTING -p tcp -m tcp -s 192.168.1.5 --sport 22 -j RETURN
-
-# ! -d 192.168.1.0/24
-# ! -d 192.168.1.0/24
-# ! -d 192.168.1.0/24
-# ! -d 192.168.1.0/24
-#
-#
-# ! -s 192.168.1.0/24
-# ! -s 192.168.1.0/24
-# ! -s 192.168.1.0/24
-# ! -s 192.168.1.0/24
-
-##############GAME PRIORITIZE################
-	#GAMES_UP
-	#LOL
-	iptables -t mangle -A POSTROUTING -p udp -m multiport --dports 5000:5500,8088 -j CONNMARK --set-mark 20
-	iptables -t mangle -A POSTROUTING -p tcp -m multiport --dports 8393:8400,2099,5223,5222,8088 -j CONNMARK --set-mark 20
-	iptables -t mangle -A POSTROUTING -m connmark --mark 20 -j CLASSIFY --set-class 1:20
-	iptables -t mangle -A POSTROUTING -m connmark --mark 20 -j RETURN
-	#GAMES_DOWN
-	#LOL
-	iptables -t mangle -A POSTROUTING -p udp -m multiport --sports 5000:5500,8088 -j CONNMARK --set-mark 21
-	iptables -t mangle -A POSTROUTING -p tcp -m multiport --sports 8393:8400,2099,5223,5222,8088 -j CONNMARK --set-mark 21
-	iptables -t mangle -A POSTROUTING -m connmark --mark 21 -j CLASSIFY --set-class 1:21
-	iptables -t mangle -A POSTROUTING -m connmark --mark 21 -j RETURN
-###############TCP CONNECTION START###########
-iptables -t mangle -A POSTROUTING -p icmp -j CLASSIFY --set-class 1:10
-iptables -t mangle -A POSTROUTING -p icmp -j RETURN
-iptables -t mangle -A POSTROUTING -p tcp -m tcp --tcp-flags SYN,RST,ACK SYN -j CLASSIFY --set-class 1:10
-iptables -t mangle -A POSTROUTING -p tcp -m tcp --tcp-flags SYN,RST,ACK SYN -j RETURN
-#iptables -t mangle -A POSTROUTING -p tcp -m tcp --tcp-flags SYN,RST,ACK ACK -j CLASSIFY --set-class 1:10
-#iptables -t mangle -A POSTROUTING -p tcp -m tcp --tcp-flags SYN,RST,ACK ACK -j RETURN
-#iptables -t mangle -A POSTROUTING -m tos --tos Minimize-Delay -j CLASSIFY --set-class 1:10
-#iptables -t mangle -A POSTROUTING -m tos --tos Minimize-Delay -j RETURN
-###############ROUTER#########################
-#iptables -t mangle -A POSTROUTING -p tcp -s 192.168.1.1/32 -j CLASSIFY --set-class 1:11
-#iptables -t mangle -A POSTROUTING -p tcp -s 192.168.1.1/32 -j RETURN
-#iptables -t mangle -A POSTROUTING -p tcp -d 192.168.1.1/32 -j CLASSIFY --set-class 1:11
-#iptables -t mangle -A POSTROUTING -p tcp -d 192.168.1.1/32 -j RETURN
-##############NEW_PI#########################
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.100-192.168.1.101 -j CLASSIFY --set-class 1:1
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.100-192.168.1.101 -j RETURN
-##############GUESTS#########################
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.80-192.168.1.254 -j CLASSIFY --set-class 1:8
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.80-192.168.1.254 -j RETURN
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --src-range 192.168.1.80-192.168.1.254 -j CLASSIFY --set-class 1:8
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --src-range 192.168.1.80-192.168.1.254 -j RETURN
-##############LOCAL##########################
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.2-192.168.1.254 --src-range 192.168.1.2-192.168.1.254 -j CLASSIFY --set-class 1:9
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.2-192.168.1.254 --src-range 192.168.1.2-192.168.1.254 -j RETURN
-##############ISLAM##########################
-#iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.20-192.168.1.29 -j CONNMARK --set-mark 2
-#iptables -t mangle -A POSTROUTING -o $iface -m connmark --mark 2 -j CLASSIFY --set-class 1:2
-#iptables -t mangle -A POSTROUTING -o $iface -m connmark --mark 2 -j RETURN
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.20-192.168.1.29 -j CLASSIFY --set-class 1:2
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.20-192.168.1.29 -j RETURN
-##############HAMDY##########################
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.30-192.168.1.39 -j CLASSIFY --set-class 1:3
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.30-192.168.1.39 -j RETURN
-##############AHMED##########################
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.40-192.168.1.49 -j CLASSIFY --set-class 1:4
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.40-192.168.1.49 -j RETURN
-##############MARAM##########################
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.50-192.168.1.59 -j CLASSIFY --set-class 1:5
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.50-192.168.1.59 -j RETURN
-##############MAMA###########################
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.60-192.168.1.69 -j CLASSIFY --set-class 1:6
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.60-192.168.1.69 -j RETURN
-##############BABA###########################
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.70-192.168.1.79 -j CLASSIFY --set-class 1:7
-iptables -t mangle -A POSTROUTING -o $iface -m iprange --dst-range 192.168.1.70-192.168.1.79 -j RETURN
-#############SETUP ROUTING FILTERS#########################################################################################
+tc_setup
+IPT_setup
 }
 
 stop() {
-#	ip link set dev $ifb down
-#	tc qdisc del dev $ifb root
-#	tc qdisc del dev $ifb ingress
 	tc qdisc del dev $iface root
-#	tc qdisc del dev $iface ingress
     iptables -t mangle -F
 }
 
