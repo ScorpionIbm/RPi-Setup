@@ -63,12 +63,28 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 #############SETUP VARIABLES###############################################################################################
 
 user_limit() {
-	tc class add dev $iface parent 1:1 classid 1:$1 htb rate $2 ceil $3 prio $4 $5
-		tc qdisc add dev $iface parent 1:$1 $6
+	parent=$1
+	class=$2
+	rate=$3
+	ceil=$4
+	prio=$5
+	quant=$6
+	qdisc=$7
+	refresh=$8
+	if [ -z "$refresh" ]
+	then
+		tc class add dev $iface parent 1:$parent classid 1:$class htb rate $rate ceil $ceil prio $prio $quant
+			tc qdisc add dev $iface parent 1:$2 $qdisc
+	elif [ $refresh=="refresh" ]
+	then
+		tc class change dev $iface parent 1:$parent classid 1:$class htb rate $rate ceil $ceil prio $prio $quant
+	fi
 }
 IPT_range() {
-	iptables -t mangle -A POSTROUTING -o $iface -m iprange $1 -j CLASSIFY --set-class 1:$2
-	iptables -t mangle -A POSTROUTING -o $iface -m iprange $1 -j RETURN
+	iprange=$1
+	class=$2
+	iptables -t mangle -A POSTROUTING -o $iface -m iprange $iprange -j CLASSIFY --set-class 1:$class
+	iptables -t mangle -A POSTROUTING -o $iface -m iprange $iprange -j RETURN
 }
 tc_setup() {
 	#############SETUP BASE CONNECTION#########################################################################################
@@ -79,31 +95,34 @@ tc_setup() {
 
 	####INTERNET
 		tc class add dev $iface parent 1: classid 1:1 htb rate $DL ceil $DL_Ceil prio $DL_Prio $quant
+}
+tc_classes() {
+		refresh=$1
 			##############ISLAM##########################
-			user_limit 2 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel"
+			user_limit 1 2 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel" "$refresh"
 			##############HAMDY##########################
-			user_limit 3 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel"
+			user_limit 1 3 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel" "$refresh"
 			##############AHMED##########################
-			user_limit 4 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel"
+			user_limit 1 4 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel" "$refresh"
 			##############MARAM##########################
-			user_limit 5 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel"
+			user_limit 1 5 $User_DL $User_DL_Ceil $User_Prio "$quant" "$fq_codel" "$refresh"
 			##############MAMA###########################
-			user_limit 6 $User_DL $User_DL $Low_Prio "$quant" "$fq_codel"
+			user_limit 1 6 $User_DL $User_DL $Low_Prio "$quant" "$fq_codel" "$refresh"
 			##############BABA###########################
-			user_limit 7 $User_DL $User_DL $Low_Prio "$quant" "$fq_codel"
+			user_limit 1 7 $User_DL $User_DL $Low_Prio "$quant" "$fq_codel" "$refresh"
 			##############GUESTS##########################
-			user_limit 8 $Guest_DL $Guest_DL_Ceil $Guest_Prio "$quant" "$fq_codel"
+			user_limit 1 8 $Guest_DL $Guest_DL_Ceil $Guest_Prio "$quant" "$fq_codel" "$refresh"
 			###############GAMES_DOWN#####################
-			user_limit 21 $Games_DL $Games_DL_Ceil $High_Prio "$quant" "$pfifo"
+			user_limit 1 21 $Games_DL $Games_DL_Ceil $High_Prio "$quant" "$pfifo" "$refresh"
 			###############GAMES_UP#######################
-			user_limit 20 $Games_UL $Games_UL_Ceil $High_Prio "$quant" "$pfifo"
+			user_limit 1 20 $Games_UL $Games_UL_Ceil $High_Prio "$quant" "$pfifo" "$refresh"
 			##############UPLOAD#########################
-			user_limit 100 $UL $UL_Ceil $UL_Prio "$quant" "$pfifo"
+			user_limit 1 100 $UL $UL_Ceil $UL_Prio "$quant" "$pfifo" "$refresh"
 		#CONNECTION_INITIATION
-		user_limit 10 $UL $UL_Ceil $UL_Prio "$quant" "$pfifo"
+		user_limit "" 10 $UL $UL_Ceil $UL_Prio "$quant" "$pfifo" "$refresh"
 	####LOCAL
 		#LOCAL
-		user_limit 9 $Local_DL $Local_Ceil $Local_Prio "$quant" "$fq_codel"
+		user_limit "" 9 $Local_DL $Local_Ceil $Local_Prio "$quant" "$fq_codel" "$refresh"
 	#############SETUP CLASSES#################################################################################################
 }
 IPT_setup() {
@@ -151,6 +170,7 @@ IPT_setup() {
 
 start() {
 tc_setup
+tc_classes
 IPT_setup
 }
 
@@ -159,6 +179,9 @@ stop() {
     iptables -t mangle -F
 }
 
+refresh() {
+	tc_classes refresh
+}
 case "$1" in
     'start')
             start 2>&1 | tee $log
@@ -185,9 +208,12 @@ case "$1" in
             limits stop ; echo "Sleeping..."; sleep 2 ;
             limits start $2
             ;;
+	'refresh')
+			refresh $2
+			;;
     *)
             echo
-            echo "Usage: $0 { start | stop | restart | status}"
+            echo "Usage: $0 { start (state global download) | stop | restart (state global download) | refresh (state global download) | status}"
             echo
             exit 1
             ;;
