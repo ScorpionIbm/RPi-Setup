@@ -3,7 +3,7 @@ DietPi
 	IPv4 Forward
 		/etc/sysctl.conf
 			net.ipv4.ip_forward=1
-	add second IP (for Pihole and darkstat together) file in /etc/init.d
+	add extraIP (for Pihole and darkstat together) file in /etc/init.d
 		#! /bin/ship addr add 192.168.1.10/24 dev eth0
 		### BEGIN INIT INFOand add to /etc/rc.local
 		# Provides:          extraIP
@@ -52,7 +52,7 @@ DietPi
 		
 		exit 0
 		
-		
+	and add to dietpi services /DietPi/dietpi/.dietpi_services_include_exclude	
 	Install PiHole
 
 PiHole
