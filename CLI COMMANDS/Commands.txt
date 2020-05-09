@@ -153,3 +153,15 @@ lighttpd -v
 ip a show eth0 up
 
 uname -r
+
+shutdown -h now
+
+nmap -sn 192.168.1.0/24
+
+ethtool -K eth0 tx-tcp-segmentation off
+
+ip addr show
+
+cat /var/log/netdata/error.log | grep fping
+
+/usr/libexec/netdata/plugins.d/fping.plugin debug 1
