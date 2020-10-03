@@ -4,67 +4,70 @@ DietPi
 		/etc/sysctl.conf
 			net.ipv4.ip_forward=1
 	add extraIP (for Pihole and darkstat together) file in /etc/init.d
-		#! /bin/ship addr add 192.168.1.10/24 dev eth0
-		### BEGIN INIT INFOand add to /etc/rc.local
+		#! /bin/sh
+		### BEGIN INIT INFO
 		# Provides:          extraIP
 		# Required-Start: $network networking
 		# Required-Stop:  $network networking
 		# Default-Start:     2 3 4 5
 		# Default-Stop:      0 1 6
-		# X-Start-Before: darkstat lighttpd
-		# X-Stop-After: darkstat lighttpd
+		# X-Start-Before: darkstat lighttpd bandwidthd pihole-FTL
+		# X-Stop-After: darkstat lighttpd bandwidthd pihole-FTL
 		# Short-Description: Create IP for extra services
 		### END INIT INFO
-		
+
 		PATH=/bin:/usr/bin:/sbin:/usr/sbin
-		
+
 		startip() {
-		    ip addr add 192.168.1.6/24 dev eth0
-		    ip addr add 192.168.1.7/24 dev eth0
-		    ip addr add 192.168.1.10/24 dev eth0
+			ip addr add 192.168.1.6/24 dev eth0
+			ip addr add 192.168.1.7/24 dev eth0
+			ip addr add 192.168.1.10/24 dev eth0
 		}
-		
+
 		stopip() {
-		    ip addr del 192.168.1.6/24 dev eth0
-		    ip addr del 192.168.1.7/24 dev eth0
-		    ip addr del 192.168.1.10/24 dev eth0
+			ip addr del 192.168.1.6/24 dev eth0
+			ip addr del 192.168.1.7/24 dev eth0
+			ip addr del 192.168.1.10/24 dev eth0
 		}
-		
+
 		case "$1" in
 		start)
-		    startip
-		    ;;
+			startip
+			;;
 		stop)
-		    stopip
-		    ;;
+			stopip
+			;;
 		restart|reload|force-reload)
-		    stopip
+			stopip
 			sleep 1
-		    startip
-		    ;;
+			startip
+			;;
 		*)
 			echo
-		    echo "Usage: $0 { start | stop | restart | reload | force-reload}"
-		    echo
-		    exit 1
-		    ;;
+			echo "Usage: $0 { start | stop | restart | reload | force-reload}"
+			echo
+			exit 1
+			;;
 		esac
-		
+
 		exit 0
 		
-	and add to dietpi services /DietPi/dietpi/.dietpi_services_include_exclude	
+	and add to dietpi services /boot/dietpi/.dietpi_services_include_exclude	
 	Install PiHole
 
 PiHole
 	add static Client IPs and bind interfaces
 		/etc/dnsmasq.d/04-pihole-static-dhcp.conf
-			###############Extra DNSMASQ Settings###############			
+			###############Extra DNSMASQ Settings###############	
+			
 			expand-hosts
 			bind-interfaces
 			listen-address=127.0.0.1
 			listen-address=192.168.1.5
-            dhcp-sequential-ip
+			dhcp-sequential-ip
 			hostsdir=/etc/localnetwork
+			dhcp-option=6,192.168.1.5,192.168.1.5
+
             ##############GUEST IP RANGE#######################
 			
             dhcp-range=tag:!known,192.168.1.100,192.168.1.150,2h
@@ -110,7 +113,7 @@ IPTABLES
 		iptables -A INPUT -d 192.168.1.10/32 -i eth0 -p tcp -m tcp --dport 80 -j REJECT --reject-with tcp-reset
 	IPtables restore (different files for each set of rules)
 			iptables-save -t nat > /etc/iptables.ipv4.nat
-			iptables-save -t filter > /etc/iptables-firewall.ipv4.nat
+			iptables-save -t filter > /etc/iptables-firewall.ipv4
 		/etc/rc.local OR (DIetPi: /var/lib/dietpi/postboot.d)
 			iptables-restore < /etc/iptables.ipv4.nat
 			iptables-restore < /etc/iptables-firewall.ipv4.nat
@@ -160,17 +163,14 @@ darkstat
 			BINDIP="-b 192.168.1.10"
 			#LOCAL="-l 192.168.1.0/255.255.255.0"
 			FILTER="not (src net 192.168.1.0/24 and dst net 192.168.1.0/24)"
-	add to /etc/init.d/darkstat to appropriate lines in start/stop/restart 
-		"ip addr add 192.168.1.10/24 dev eth0"
-		"ip addr del 192.168.1.10/24 dev eth0" 
 	
 	service darkstat start
 	systemctl enable darkstat
-	Create Cron job in /etc/cron.hourly/darkstat to save collected data to desk
+	Create Cron job in /etc/cron.hourly/darkstat to save collected data to disk
 		#!/bin/bash
 		sudo kill -SIGUSR2 $(pgrep -o darkstat)
 	make /etc/cron.hourly/darkstat executable
-	Create Cron job in /etc/cron.hourly/darkstat to save monthly data to /mnt/dietpi_userdata/darkstat_backup
+	Create Cron job in /etc/cron.monthly/darkstat to save monthly data to /mnt/dietpi_userdata/darkstat_backup
 		#!/bin/bash
 		date=$(date +"%m_%Y")
 		filename="/mnt/dietpi_userdata/darkstat_backup/darkstat_$date.db"
@@ -178,7 +178,7 @@ darkstat
 		sudo service darkstat stop
 		sudo mv /var/lib/darkstat/darkstat.db $filename
 		sudo service darkstat start
-		make /etc/cron.monthly/darkstat executable
+	make /etc/cron.monthly/darkstat executable
 
 bandwidthd
 	apt install bandwidthd
@@ -195,6 +195,12 @@ Haveged
 	update-rc.d haveged defaults
 
 NTP servers
-	213.251.52.217
-	217.114.59.66
+	old: 213.251.52.217
+	old: 217.114.59.66
+	better: 196.49.6.67
 
+Setting BBR as the default is simple. Open up a terminal window and issue the command sudo nano /etc/sysctl.conf. At the bottom of this file, add the following two lines:
+
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+Save and close that file. Reload sysctl with the command sudo sysctl -p. Now when you check which congestion control algorithm is in use (with the command sysctl net.ipv4.tcp_congestion_control), you will see output containing bbr (Figure A).
